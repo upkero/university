@@ -1,5 +1,5 @@
 class FairError(Exception):
-    """Base exception for fair management errors."""
+    """Base exception for market management errors."""
 
 
 class NotFoundError(FairError):

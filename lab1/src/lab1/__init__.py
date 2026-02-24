@@ -1,1 +1,1 @@
-"""Fair management system package."""
+"""Open market management system package."""
