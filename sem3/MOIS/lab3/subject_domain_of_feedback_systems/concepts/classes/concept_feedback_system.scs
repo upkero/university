@@ -1,0 +1,5 @@
+concept_feedback_system
+<- sc_node_class;
+=> nrel_main_idtf:
+[система обратной связи]
+(* <- lang_ru;; *);

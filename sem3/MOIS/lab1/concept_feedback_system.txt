@@ -1,0 +1,30 @@
+concept_feedback_system
+=> nrel_main_idtf:
+   [Система обратной связи*]
+   (* <- lang_ru;; *);;
+=> nrel_main_idtf:
+   [Feedback system*]
+   (* <- lang_en;; *);;
+
+<- rrel_explored_concept:
+   subject_domain_feedback_systems;;
+
+=> nrel_definition:
+   [Система обратной связи — это совокупность элементов, обеспечивающих измерение отклика системы и передачу информации для корректировки управляющих воздействий с целью поддержания требуемого состояния.]
+   (* <- lang_ru;; *);;
+
+=> nrel_inclusion:
+   concept_sensor;
+   concept_controller;
+   concept_actuator;
+   concept_control_object;
+   concept_feedback_signal;;
+
+=> nrel_related_concept:
+   concept_control_system;
+   concept_information_flow;
+   concept_feedback_relation;;
+
+=> rrel_example:
+   [Примером системы обратной связи является автоматическое регулирование температуры в помещении: датчик фиксирует отклонение от заданного значения, и система корректирует подачу тепла.]
+   (* <- lang_ru;; *);;

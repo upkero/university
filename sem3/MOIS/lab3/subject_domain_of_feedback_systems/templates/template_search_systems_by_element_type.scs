@@ -1,0 +1,28 @@
+@search_feedback_systems_by_element = {
+  rrel_init_template: {
+    rrel_template: [*
+      // вход: элемент контура
+      @input_element = (.._element <-_ concept_control_loop_element);;
+
+      // система, которая состоит из этого элемента
+      nrel_consists_of _-> (.._system <-_ concept_feedback_system
+                            _=> .._element);;
+
+      @output_system = (.._system <-_ concept_feedback_system);;
+    *];
+
+    rrel_template_input_params: {
+      @input_element
+    };
+
+    rrel_template_output_params: {
+      @output_system
+    };
+  } (* <- nrel_search_set_template;; *);
+};;
+
+@search_feedback_systems_by_element
+<- nrel_fixed_search_strategy_template;
+=> nrel_main_idtf:
+[Шаблон поиска систем по элементу контура]
+(* <- lang_ru;; *);

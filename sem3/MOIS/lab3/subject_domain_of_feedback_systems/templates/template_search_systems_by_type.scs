@@ -1,0 +1,29 @@
+@search_feedback_systems_by_type = {
+  rrel_init_template: {
+    rrel_template: [*
+      // вход: конкретный тип обратной связи
+      @input_feedback_type = (.._feedback_type <-_ concept_feedback_type);;
+
+      // система с таким типом
+      nrel_feedback_type _-> (.._feedback_system <-_ concept_feedback_system
+                              _=> .._feedback_type);;
+
+      // выход: найденные системы
+      @output_system = (.._feedback_system <-_ concept_feedback_system);;
+    *];
+
+    rrel_template_input_params: {
+      @input_feedback_type
+    };
+
+    rrel_template_output_params: {
+      @output_system
+    };
+  } (* <- nrel_search_set_template;; *);
+};;
+
+@search_feedback_systems_by_type
+<- nrel_fixed_search_strategy_template;
+=> nrel_main_idtf:
+[Шаблон поиска систем по типу обратной связи]
+(* <- lang_ru;; *);

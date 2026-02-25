@@ -1,0 +1,255 @@
+subject_domain_of_feedback_control_systems
+=> nrel_main_idtf:
+   [Предметная область систем обратной связи]
+   (*
+      <- lang_ru;;
+   *);
+<- concept_subject_domain;
+=> nrel_ontology:
+   structural_specification_of_subject_domain_of_feedback_control_systems;
+   set_theoretic_ontology_of_subject_domain_of_feedback_control_systems;;
+
+structural_specification_of_subject_domain_of_feedback_control_systems = [*
+<- concept_structural_specification_of_subject_domain;;
+
+subject_domain_of_feedback_control_systems = [*
+-> rrel_maximum_studied_object_class:
+   concept_control_system;
+-> rrel_not_maximum_studied_object_class:
+   concept_open_loop_system;
+   concept_closed_loop_system;
+   concept_controller;
+   concept_pid_controller;
+   concept_state_space_controller;
+   concept_plant;
+   concept_sensor;
+   concept_actuator;
+   concept_filter;
+   concept_signal;
+   concept_reference_signal;
+   concept_error_signal;
+   concept_control_signal;
+   concept_output_signal;
+   concept_disturbance_signal;
+   concept_feedback_path;
+   concept_transfer_function;
+   concept_frequency_response;
+   concept_stability_property;
+   concept_time_response_property;
+   concept_performance_index;
+-> rrel_explored_relation:
+   rrel_input_signal;
+   rrel_output_signal;
+   rrel_error_signal;
+   rrel_control_signal;
+   rrel_reference_signal;
+   rrel_disturbance_signal;
+   rrel_measurement_signal;
+   rrel_forward_path;
+   rrel_feedback_path;
+   nrel_has_controller;
+   nrel_has_plant;
+   nrel_has_sensor;
+   nrel_has_actuator;
+   nrel_has_filter;
+   nrel_series_connection;
+   nrel_parallel_connection;
+   nrel_feedback_connection;
+   nrel_negative_feedback;
+   nrel_positive_feedback;
+   nrel_transfer_function;
+   nrel_stability;
+   nrel_gain;
+   nrel_time_constant;
+   nrel_bandwidth;
+   nrel_phase_margin;
+   nrel_amplitude_margin;
+   nrel_settling_time;
+   nrel_overshoot;
+   nrel_rise_time;
+   nrel_steady_state_error;;
+*];
+<= nrel_child_subject_domain:
+   subject_domain_of_control_systems;
+=> nrel_child_subject_domain:
+   subject_domain_of_feedback_control_systems_in_MATLAB;
+   subject_domain_of_feedback_control_systems_in_Python;;
+*];;
+
+subject_domain_of_feedback_control_systems = [*
+/* Пример конкретной системы */
+CS1
+<- concept_closed_loop_system;
+=> nrel_has_controller:
+   C1;
+=> nrel_has_plant:
+   P1;
+=> nrel_has_sensor:
+   S1;
+=> nrel_has_actuator:
+   A1;
+=> nrel_feedback_connection:
+   FB1;
+=> nrel_negative_feedback:
+   FB1;
+-> rrel_reference_signal:
+   R1;
+-> rrel_output_signal:
+   Y1;
+-> rrel_error_signal:
+   E1;
+-> rrel_control_signal:
+   U1;
+-> rrel_disturbance_signal:
+   D1;
+=> nrel_transfer_function:
+   Gcl;
+
+C1
+<- concept_pid_controller;
+=> nrel_transfer_function:
+   Gc;
+-> rrel_input_signal:
+   E1;
+-> rrel_output_signal:
+   U1;;
+
+P1
+<- concept_plant;
+=> nrel_transfer_function:
+   Gp;
+-> rrel_input_signal:
+   U1;
+-> rrel_output_signal:
+   Y_true;;
+
+S1
+<- concept_sensor;
+=> nrel_transfer_function:
+   Hs;
+-> rrel_input_signal:
+   Y_true;
+-> rrel_output_signal:
+   Y1;;
+
+A1
+<- concept_actuator;
+=> nrel_transfer_function:
+   Ga;
+-> rrel_input_signal:
+   U1;
+-> rrel_output_signal:
+   U1a;;
+
+FB1
+<- concept_feedback_path;
+-> rrel_forward_path:
+   <Gc; Ga; Gp>;
+-> rrel_feedback_path:
+   Hs;;
+
+R1 <- concept_reference_signal;;
+E1 <- concept_error_signal;;
+U1 <- concept_control_signal;;
+Y1 <- concept_output_signal;;
+D1 <- concept_disturbance_signal;;
+
+/* Связи производительности и устойчивости */
+CS1
+=> nrel_stability:
+   [устойчиво_по_Ляпунову];
+=> nrel_phase_margin:
+   [45_deg];
+=> nrel_gain:
+   [K_overall];
+=> nrel_bandwidth:
+   [wb];
+=> nrel_settling_time:
+   [ts_2percent];
+=> nrel_overshoot:
+   [Mp];
+=> nrel_steady_state_error:
+   [ess];;
+
+/* Именованные передаточные функции (как знаки внешних сущностей/формул) */
+Gc <- concept_transfer_function;;
+Gp <- concept_transfer_function;;
+Ga <- concept_transfer_function;;
+Hs <- concept_transfer_function;;
+Gcl <- concept_transfer_function;;
+*];;
+
+set_theoretic_ontology_of_subject_domain_of_feedback_control_systems = [*
+<- concept_set_theoretic_ontology_of_subject_domain;;
+
+/* Базовые разбиения */
+concept_control_system
+=> nrel_subdividing: {
+   concept_open_loop_system;
+   concept_closed_loop_system
+};;
+
+concept_signal
+=> nrel_subdividing: {
+   concept_reference_signal;
+   concept_error_signal;
+   concept_control_signal;
+   concept_output_signal;
+   concept_disturbance_signal;
+   concept_measurement_signal
+};;
+
+concept_controller
+=> nrel_subdividing: {
+   concept_pid_controller;
+   concept_state_space_controller
+};;
+
+concept_transfer_function
+=> nrel_inclusion:
+   concept_frequency_response;;
+
+/* Ролевые отношения для сигналов и трактов */
+rrel_input_signal
+=> nrel_inclusion:
+   rrel_reference_signal;;
+
+rrel_output_signal
+=> nrel_inclusion:
+   rrel_measurement_signal;;
+
+/* Структурные связи */
+nrel_feedback_connection
+=> nrel_subdividing: {
+   nrel_negative_feedback;
+   nrel_positive_feedback
+};;
+
+nrel_series_connection
+=> nrel_inclusion:
+   nrel_feedback_connection;;
+
+nrel_parallel_connection
+=> nrel_inclusion:
+   nrel_feedback_connection;;
+
+/* Свойства и показатели качества */
+concept_stability_property
+=> nrel_inclusion:
+   nrel_stability;;
+
+concept_time_response_property
+=> nrel_subdividing: {
+   nrel_settling_time;
+   nrel_rise_time;
+   nrel_overshoot;
+   nrel_steady_state_error
+};;
+
+concept_frequency_response
+=> nrel_subdividing: {
+   nrel_bandwidth;
+   nrel_phase_margin;
+   nrel_amplitude_margin
+};;
+*];;

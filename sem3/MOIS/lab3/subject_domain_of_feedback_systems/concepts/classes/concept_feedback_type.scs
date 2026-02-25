@@ -1,0 +1,17 @@
+concept_feedback_type
+<- sc_node_class;
+=> nrel_main_idtf:
+[тип обратной связи]
+(* <- lang_ru;; *);
+
+concept_negative_feedback
+<- concept_feedback_type;
+=> nrel_main_idtf:
+[отрицательная обратная связь]
+(* <- lang_ru;; *);
+
+concept_positive_feedback
+<- concept_feedback_type;
+=> nrel_main_idtf:
+[положительная обратная связь]
+(* <- lang_ru;; *);

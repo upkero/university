@@ -1,0 +1,24 @@
+concept_feedback_channel_relation
+=> nrel_main_idtf:
+   [Отношение обратного канала*]
+   (* <- lang_ru;; *);;
+=> nrel_main_idtf:
+   [Feedback channel relation*]
+   (* <- lang_en;; *);;
+
+<- rrel_explored_concept:
+   subject_domain_feedback_systems;;
+
+=> nrel_definition:
+   [Отношение обратного канала — это ориентированное бинарное неролевое отношение между выходом системы и её управляющим входом, отражающее наличие канала передачи сигнала обратной связи.]
+   (* <- lang_ru;; *);;
+
+=> nrel_related_concept:
+   concept_feedback_system;
+   concept_output_signal;
+   concept_control_input;
+   concept_feedback_signal;;
+
+=> nrel_inclusion:
+   concept_open_loop_relation;
+   concept_closed_loop_relation;;

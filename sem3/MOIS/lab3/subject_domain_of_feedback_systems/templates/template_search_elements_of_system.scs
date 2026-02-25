@@ -1,0 +1,26 @@
+@search_elements_of_feedback_system = {
+  rrel_init_template: {
+    rrel_template: [*
+      // вход: система обратной связи
+      @input_system = (.._system <-_ concept_feedback_system);;
+
+      // элементы системы
+      nrel_consists_of _-> (.._system _=> .._element);;
+      @output_element = (.._element <-_ concept_control_loop_element);;
+    *];
+
+    rrel_template_input_params: {
+      @input_system
+    };
+
+    rrel_template_output_params: {
+      @output_element
+    };
+  } (* <- nrel_search_set_template;; *);
+};;
+
+@search_elements_of_feedback_system
+<- nrel_fixed_search_strategy_template;
+=> nrel_main_idtf:
+[Шаблон поиска элементов системы обратной связи]
+(* <- lang_ru;; *);
