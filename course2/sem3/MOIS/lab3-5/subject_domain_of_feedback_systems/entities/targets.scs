@@ -1,0 +1,9 @@
+target_mobile_app
+<- concept_target;
+=> nrel_main_idtf: [мобильное приложение](* <- lang_ru;; *);
+=> nrel_main_idtf: [mobile app](* <- lang_en;; *);;
+
+target_web_portal
+<- concept_target;
+=> nrel_main_idtf: [веб-портал](* <- lang_ru;; *);
+=> nrel_main_idtf: [web portal](* <- lang_en;; *);;

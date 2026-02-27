@@ -1,0 +1,14 @@
+status_new
+<- concept_status;
+=> nrel_main_idtf: [новый](* <- lang_ru;; *);
+=> nrel_main_idtf: [new](* <- lang_en;; *);;
+
+status_in_progress
+<- concept_status;
+=> nrel_main_idtf: [в работе](* <- lang_ru;; *);
+=> nrel_main_idtf: [in progress](* <- lang_en;; *);;
+
+status_resolved
+<- concept_status;
+=> nrel_main_idtf: [решён](* <- lang_ru;; *);
+=> nrel_main_idtf: [resolved](* <- lang_en;; *);;

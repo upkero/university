@@ -1,0 +1,16 @@
+@search_feedbacks_by_target_template = {
+    rrel_init_template: {
+        rrel_template: [*
+            @input_param1 = (.._target <-_ concept_target);;
+            rrel_target _-> (.._target <-_ .._feedback);;
+            @output_param1 = (.._feedback <-_ concept_feedback);;
+        *];
+        rrel_template_input_params: { @input_param1 };
+        rrel_template_output_params: { @output_param1 }
+    } (* <- nrel_search_set_template;; *)
+};;
+
+@search_feedbacks_by_target_template
+<- nrel_fixed_search_strategy_template;
+=> nrel_main_idtf: [Шаблон поиска обратной связи по цели](* <- lang_ru;; *);
+=> nrel_main_idtf: [Template for searching feedback by target](* <- lang_en;; *);;

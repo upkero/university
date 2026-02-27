@@ -1,0 +1,12 @@
+concept_target
+<- sc_node_class;
+=> nrel_main_idtf:
+    [объект обратной связи]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [feedback target]
+    (*
+        <- lang_en;;
+    *);;

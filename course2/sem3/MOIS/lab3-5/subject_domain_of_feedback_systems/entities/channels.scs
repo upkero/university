@@ -1,0 +1,14 @@
+channel_web
+<- concept_channel;
+=> nrel_main_idtf: [веб-форма](* <- lang_ru;; *);
+=> nrel_main_idtf: [web form](* <- lang_en;; *);;
+
+channel_email
+<- concept_channel;
+=> nrel_main_idtf: [электронная почта](* <- lang_ru;; *);
+=> nrel_main_idtf: [email](* <- lang_en;; *);;
+
+channel_chat
+<- concept_channel;
+=> nrel_main_idtf: [чат](* <- lang_ru;; *);
+=> nrel_main_idtf: [chat](* <- lang_en;; *);;

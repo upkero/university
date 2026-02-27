@@ -1,0 +1,15 @@
+action_search_problematic_feedbacks
+<- sc_node_class;
+<= nrel_inclusion:
+    information_action;
+
+=> nrel_main_idtf:
+    [поиск проблемных обращений]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [search problematic feedbacks]
+    (*
+        <- lang_en;;
+    *);;

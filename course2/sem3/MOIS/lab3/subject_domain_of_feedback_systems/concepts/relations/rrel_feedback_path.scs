@@ -1,9 +1,0 @@
-rrel_feedback_path
-<- sc_node_role_relation;
-=> nrel_main_idtf:
-[контур обратной связи']
-(* <- lang_ru;; *);
-=> nrel_first_domain:
-concept_feedback_system;
-=> nrel_second_domain:
-concept_control_loop_element;;

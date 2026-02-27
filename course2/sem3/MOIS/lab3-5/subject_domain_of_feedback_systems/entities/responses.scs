@@ -1,0 +1,24 @@
+response_001
+<- concept_response;
+=> nrel_main_idtf: [ответ 001](* <- lang_ru;; *);
+=> nrel_main_idtf: [response 001](* <- lang_en;; *);;
+
+response_001_text
+<- sc_link;;
+response_001_text = [Спасибо! Мы исправили проблему, обновите приложение до последней версии.];;
+
+response_001
+=> nrel_response_text: response_001_text;;
+
+
+response_002
+<- concept_response;
+=> nrel_main_idtf: [ответ 002](* <- lang_ru;; *);
+=> nrel_main_idtf: [response 002](* <- lang_en;; *);;
+
+response_002_text
+<- sc_link;;
+response_002_text = [Проверили. Нужны дополнительные данные — пришлите, пожалуйста, скриншот ошибки и время.];;
+
+response_002
+=> nrel_response_text: response_002_text;;

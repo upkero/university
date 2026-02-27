@@ -1,0 +1,16 @@
+rrel_author
+<- sc_node_role_relation;
+=> nrel_main_idtf:
+    [автор']
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [author']
+    (*
+        <- lang_en;;
+    *);
+=> nrel_first_domain:
+    concept_feedback;
+=> nrel_second_domain:
+    concept_user;;

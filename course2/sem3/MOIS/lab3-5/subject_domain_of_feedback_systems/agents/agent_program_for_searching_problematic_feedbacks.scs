@@ -1,0 +1,136 @@
+agent_program_for_searching_problematic_feedbacks
+=> nrel_main_idtf:
+    [Агентная программа поиска проблемных обращений]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [Agent program for searching problematic feedbacks]
+    (*
+        <- lang_en;;
+    *);
+<- scp_program;
+<- agent_scp_program;
+-> rrel_key_sc_element: _process;;
+
+agent_program_for_searching_problematic_feedbacks = [*
+_process
+<-_ scp_process;
+
+_-> rrel_1:: rrel_in:: .._event;
+_-> rrel_2:: rrel_in:: .._incoming_arc;
+
+<=_ nrel_decomposition_of_action:: .._decomposition
+(*
+    // 1) Получить action по дуге, которая вызвала событие
+    _-> rrel_1:: .._get_action
+    (*
+        <-_ searchElStr3;;
+
+        _-> rrel_1:: rrel_assign:: rrel_scp_var:: .._subscription_element;;
+        _-> rrel_2:: rrel_fixed:: rrel_scp_const:: .._incoming_arc;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._action;;
+
+        _=> nrel_goto:: .._check_action_class;;
+    *);;
+
+    // 2) Проверить, что действие — экземпляр нужного класса action_search_problematic_feedbacks
+    _-> .._check_action_class
+    (*
+        <-_ searchElStr3;;
+
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: action_search_problematic_feedbacks;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_class;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._action;;
+
+        _=> nrel_then:: .._call_program_for_searching_problematic_feedbacks;;
+        _=> nrel_else:: .._finish_action_unsuccessfully;;
+    *);;
+
+    // 3) Вызвать scp-программу из ЛР4: program_for_searching_problematic_feedbacks
+    _-> .._call_program_for_searching_problematic_feedbacks
+    (*
+        <-_ call;;
+
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: program_for_searching_problematic_feedbacks;;
+        _-> rrel_2:: rrel_fixed:: rrel_scp_const:: .._params
+        (*
+            // in-параметры (фиксированные для “проблемных”)
+            _-> rrel_1:: rrel_fixed:: rrel_scp_const:: status_in_progress;;
+            _-> rrel_2:: rrel_fixed:: rrel_scp_const:: channel_web;;
+            _-> rrel_3:: rrel_fixed:: rrel_scp_const:: channel_email;;
+
+            // out-параметр
+            _-> rrel_4:: rrel_fixed:: rrel_scp_var:: .._result_feedbacks;;
+        *);;
+
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._descriptor;;
+
+        _=> nrel_goto:: .._wait_for_result;;
+    *);;
+
+    // 4) Дождаться результата
+    _-> .._wait_for_result
+    (*
+        <-_ waitReturn;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._descriptor;;
+        _=> nrel_goto:: .._set_result;;
+    *);;
+
+    // 5) Записать результат в действие (nrel_result)
+    _-> .._set_result
+    (*
+        <-_ genElStr5;;
+
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._action;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const:: rrel_common_arc:: .._arc_res;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._result_feedbacks;;
+        _-> rrel_4:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_attr;;
+        _-> rrel_5:: rrel_fixed:: rrel_scp_const:: nrel_result;;
+
+        _=> nrel_goto:: .._finish_action_successfully;;
+    *);;
+
+    // 6) Завершить успешно
+    _-> .._finish_action_successfully
+    (*
+        <-_ genElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: action_finished_successfully;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_succ;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._action;;
+        _=> nrel_goto:: .._finish_action;;
+    *);;
+
+    // 7) Общее завершение (action_finished)
+    _-> .._finish_action
+    (*
+        <-_ genElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: action_finished;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_fin;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._action;;
+        _=> nrel_goto:: .._return;;
+    *);;
+
+    // 8) Завершить неуспешно
+    _-> .._finish_action_unsuccessfully
+    (*
+        <-_ genElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: action_finished_unsuccessfully;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_unsucc;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._action;;
+        _=> nrel_goto:: .._finish_action;;
+    *);;
+
+    _-> .._return
+    (*
+        <-_ printEl;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._result_feedbacks;;
+        _=> nrel_goto:: .._return_result;;
+    *);;
+
+    _-> .._return_result
+    (*
+        <-_ return;;
+    *);;
+*);;
+*];;

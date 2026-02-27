@@ -1,0 +1,12 @@
+concept_response
+<- sc_node_class;
+=> nrel_main_idtf:
+    [ответ]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [response]
+    (*
+        <- lang_en;;
+    *);;

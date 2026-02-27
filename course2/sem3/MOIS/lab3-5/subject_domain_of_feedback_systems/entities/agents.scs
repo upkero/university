@@ -1,0 +1,9 @@
+agent_alex
+<- concept_support_agent;
+=> nrel_main_idtf: [Алексей](* <- lang_ru;; *);
+=> nrel_main_idtf: [Alex](* <- lang_en;; *);;
+
+agent_irina
+<- concept_support_agent;
+=> nrel_main_idtf: [Ирина](* <- lang_ru;; *);
+=> nrel_main_idtf: [Irina](* <- lang_en;; *);;

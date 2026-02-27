@@ -1,0 +1,74 @@
+feedback_001
+<- concept_feedback;
+=> nrel_main_idtf: [обратная связь 001](* <- lang_ru;; *);
+=> nrel_main_idtf: [feedback 001](* <- lang_en;; *);;
+
+feedback_001_text
+<- sc_link;;
+feedback_001_text = [Приложение падает при входе в аккаунт.];;
+
+feedback_001
+-> rrel_author: user_anna;
+-> rrel_target: target_mobile_app;
+-> rrel_channel: channel_web;
+=> nrel_status: status_new;
+=> nrel_text: feedback_001_text;;
+
+
+
+feedback_002
+<- concept_feedback;
+=> nrel_main_idtf: [обратная связь 002](* <- lang_ru;; *);
+=> nrel_main_idtf: [feedback 002](* <- lang_en;; *);;
+
+feedback_002_text
+<- sc_link;;
+feedback_002_text = [Не приходит письмо подтверждения на почту.];;
+
+feedback_002
+-> rrel_author: user_ivan;
+-> rrel_target: target_web_portal;
+-> rrel_channel: channel_email;
+-> rrel_agent: agent_irina;
+=> nrel_status: status_in_progress;
+=> nrel_text: feedback_002_text;;
+
+
+
+feedback_003
+<- concept_feedback;
+=> nrel_main_idtf: [обратная связь 003](* <- lang_ru;; *);
+=> nrel_main_idtf: [feedback 003](* <- lang_en;; *);;
+
+feedback_003_text
+<- sc_link;;
+feedback_003_text = [Как сменить пароль в приложении?];;
+
+feedback_003
+-> rrel_author: user_pidor;
+-> rrel_target: target_mobile_app;
+-> rrel_channel: channel_chat;
+-> rrel_agent: agent_alex;
+-> rrel_response: response_001;
+=> nrel_status: status_resolved;
+=> nrel_text: feedback_003_text;;
+
+
+
+feedback_004
+<- concept_feedback;
+=> nrel_main_idtf: [обратная связь 004](* <- lang_ru;; *);
+=> nrel_main_idtf: [feedback 004](* <- lang_en;; *);;
+
+feedback_004_text
+<- sc_link;;
+feedback_004_text = [На портале ошибка 500 при открытии страницы профиля.];;
+
+feedback_004
+-> rrel_author: user_anna;
+-> rrel_target: target_web_portal;
+-> rrel_channel: channel_web;
+-> rrel_agent: agent_irina;
+-> rrel_response: response_002;
+=> nrel_status: status_in_progress;
+=> nrel_text: feedback_004_text;;

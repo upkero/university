@@ -1,0 +1,12 @@
+concept_channel
+<- sc_node_class;
+=> nrel_main_idtf:
+    [канал]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [channel]
+    (*
+        <- lang_en;;
+    *);;

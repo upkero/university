@@ -1,0 +1,12 @@
+concept_feedback
+<- sc_node_class;
+=> nrel_main_idtf:
+    [обратная связь]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [feedback]
+    (*
+        <- lang_en;;
+    *);;

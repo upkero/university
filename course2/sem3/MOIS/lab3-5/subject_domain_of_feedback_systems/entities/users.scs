@@ -1,0 +1,14 @@
+user_anna
+<- concept_user;
+=> nrel_main_idtf: [Анна](* <- lang_ru;; *);
+=> nrel_main_idtf: [Anna](* <- lang_en;; *);;
+
+user_ivan
+<- concept_user;
+=> nrel_main_idtf: [Иван](* <- lang_ru;; *);
+=> nrel_main_idtf: [Ivan](* <- lang_en;; *);;
+
+user_pidor
+<- concept_user;
+=> nrel_main_idtf: [Пидор](* <- lang_ru;; *);
+=> nrel_main_idtf: [Pidor](* <- lang_en;; *);;

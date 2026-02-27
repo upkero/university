@@ -1,0 +1,12 @@
+concept_status
+<- sc_node_class;
+=> nrel_main_idtf:
+    [статус]
+    (*
+        <- lang_ru;;
+    *);
+=> nrel_main_idtf:
+    [status]
+    (*
+        <- lang_en;;
+    *);;

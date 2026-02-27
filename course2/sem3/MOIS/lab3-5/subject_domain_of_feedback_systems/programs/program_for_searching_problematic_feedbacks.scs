@@ -1,0 +1,135 @@
+// ==========================================================================================
+// ПРОГРАММА: Поиск проблемных обращений (feedback)
+// Условие: nrel_status = status_in_progress AND (rrel_channel = channel_web OR channel_email)
+// Вход:  _status, _channel_1, _channel_2
+// Выход: _result_set
+// ==========================================================================================
+
+program_for_searching_problematic_feedbacks
+<- scp_program;
+-> rrel_key_sc_element: .._process;;
+
+program_for_searching_problematic_feedbacks = [*
+.._process
+<-_ scp_process;
+
+// ОБЪЯВЛЕНИЕ ВХОДНЫХ/ВЫХОДНЫХ ПАРАМЕТРОВ:
+_-> rrel_1:: rrel_in:: .._status;
+_-> rrel_2:: rrel_in:: .._channel_1;
+_-> rrel_3:: rrel_in:: .._channel_2;
+_-> rrel_4:: rrel_out:: .._result_set;
+
+<=_ nrel_decomposition_of_action:: .._decomposition
+(*
+    // ШАГ 1: создать пустое результирующее множество
+    _-> rrel_1:: .._gen_result_set
+    (*
+        <-_ genElStr3;;
+        _-> rrel_1:: rrel_assign:: rrel_scp_var:: rrel_const:: rrel_node:: rrel_structure:: .._result_set;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_from_result_to_class;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_const:: concept_feedback;;
+        _=> nrel_goto:: .._search_all_feedbacks;;
+    *);;
+
+    // ШАГ 2: найти множество всех feedback (для перебора)
+    _-> .._search_all_feedbacks
+    (*
+        <-_ searchSetStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_const:: concept_feedback;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_from_class;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._feedback;;
+        _-> rrel_set_3:: rrel_assign:: rrel_scp_var:: .._all_feedbacks;;
+
+        _=> nrel_then:: .._get_next_feedback;;
+        _=> nrel_else:: .._return_result;;
+    *);;
+
+    // ШАГ 3: взять следующий feedback из множества .._all_feedbacks
+    _-> .._get_next_feedback
+    (*
+        <-_ searchElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._all_feedbacks;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_in_set;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._feedback;;
+
+        _=> nrel_then:: .._check_status;;
+        _=> nrel_else:: .._erase_all_feedbacks_set;;
+    *);;
+
+    // ШАГ 4: проверить статус
+    _-> .._check_status
+    (*
+        <-_ searchElStr5;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._feedback;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const:: rrel_common_arc:: .._arc_fb_status;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._status;;
+        _-> rrel_4:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_attr_status;;
+        _-> rrel_5:: rrel_fixed:: rrel_scp_const:: nrel_status;;
+
+        _=> nrel_then:: .._check_channel_1;;
+        _=> nrel_else:: .._erase_feedback_from_pool;;
+    *);;
+
+    // ШАГ 5: проверить канал 1
+    _-> .._check_channel_1
+    (*
+        <-_ searchElStr5;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._feedback;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_fb_ch1;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._channel_1;;
+        _-> rrel_4:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_attr_ch1;;
+        _-> rrel_5:: rrel_fixed:: rrel_scp_const:: rrel_channel;;
+
+        _=> nrel_then:: .._add_to_result;;
+        _=> nrel_else:: .._check_channel_2;;
+    *);;
+
+    // ШАГ 6: проверить канал 2
+    _-> .._check_channel_2
+    (*
+        <-_ searchElStr5;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._feedback;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_fb_ch2;;
+        _-> rrel_3:: rrel_assign:: rrel_scp_var:: .._channel_2;;
+        _-> rrel_4:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_attr_ch2;;
+        _-> rrel_5:: rrel_fixed:: rrel_scp_const:: rrel_channel;;
+
+        _=> nrel_then:: .._add_to_result;;
+        _=> nrel_else:: .._erase_feedback_from_pool;;
+    *);;
+
+    // ШАГ 7: добавить найденный feedback в результат
+    _-> .._add_to_result
+    (*
+        <-_ genElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._result_set;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_const_perm_pos_arc:: .._arc_add;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._feedback;;
+        _=> nrel_goto:: .._erase_feedback_from_pool;;
+    *);;
+
+    // ШАГ 8: удалить текущий feedback из _all_feedbacks и продолжить цикл
+    _-> .._erase_feedback_from_pool
+    (*
+        <-_ eraseElStr3;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: .._all_feedbacks;;
+        _-> rrel_2:: rrel_assign:: rrel_scp_var:: rrel_erase:: .._arc_in_set;;
+        _-> rrel_3:: rrel_fixed:: rrel_scp_var:: .._feedback;;
+        _=> nrel_goto:: .._get_next_feedback;;
+    *);;
+
+    // ШАГ 9: удалить временное множество _all_feedbacks
+    _-> .._erase_all_feedbacks_set
+    (*
+        <-_ eraseEl;;
+        _-> rrel_1:: rrel_fixed:: rrel_scp_var:: rrel_erase:: .._all_feedbacks;;
+        _=> nrel_goto:: .._return_result;;
+    *);;
+
+    // ШАГ 10: завершить программу
+    _-> .._return_result
+    (*
+        <-_ return;;
+    *);;
+*);;
+*];;
