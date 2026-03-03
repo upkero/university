@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-from src.bit_core import _int_to_unsigned_bits, _unsigned_bits_to_int, _validate_bits
+"""BCD support for this lab variant: Excess-3 only."""
+
+from src.bit_core import (
+    _add_unsigned_bits,
+    _compare_unsigned_bits,
+    _fit_unsigned_to_width,
+    _int_to_unsigned_bits,
+    _subtract_unsigned_bits,
+    _unsigned_bits_to_int,
+    _validate_bits,
+)
 from src.common_types import BCD_DIGITS, BIT_WIDTH, BCDOpResult, BitArray
 
 
@@ -73,24 +83,24 @@ def add_excess3(a: int, b: int) -> BCDOpResult:
     b_bits = decimal_to_excess3_bits(b)
     result = [0] * BIT_WIDTH
     carry = 0
+    correction = [0, 0, 1, 1]
 
     for nibble_index in range(BCD_DIGITS - 1, -1, -1):
         start = nibble_index * 4
-        a_code = _unsigned_bits_to_int(a_bits[start : start + 4])
-        b_code = _unsigned_bits_to_int(b_bits[start : start + 4])
-        raw_sum = a_code + b_code + carry
+        a_code = a_bits[start : start + 4]
+        b_code = b_bits[start : start + 4]
+        raw_sum_bits, nibble_carry = _add_unsigned_bits(a_code, b_code, carry)
 
-        if raw_sum >= 16:
+        if nibble_carry == 1:
+            corrected_bits, _ = _add_unsigned_bits(raw_sum_bits, correction)
             carry = 1
-            corrected = (raw_sum - 16) + 3
         else:
+            if _compare_unsigned_bits(raw_sum_bits, correction) < 0:
+                raise ValueError("Unexpected Excess-3 correction result")
+            corrected_bits = _fit_unsigned_to_width(_subtract_unsigned_bits(raw_sum_bits, correction), 4)
             carry = 0
-            corrected = raw_sum - 3
 
-        if corrected < 0 or corrected > 15:
-            raise ValueError("Unexpected Excess-3 correction result")
-
-        result[start : start + 4] = _int_to_unsigned_bits(corrected, 4)
+        result[start : start + 4] = corrected_bits
 
     overflow = carry == 1
     stored_decimal = excess3_bits_to_decimal(result)

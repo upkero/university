@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from src.bit_core import (
     _add_unsigned_bits,
-    _int_to_unsigned_bits,
-    _max_magnitude,
+    _divide_unsigned_bits,
+    _fit_unsigned_to_width,
+    _multiply_unsigned_bits,
     _negate_twos,
+    _trim_leading_zeros,
     _unsigned_bits_to_int,
-    _unsigned_divide,
-    _unsigned_multiply,
 )
 from src.common_types import DivisionResult, IntegerOpResult, MAG_WIDTH
 from src.integer_codes import (
@@ -44,17 +44,17 @@ def subtract_in_twos_complement(minuend: int, subtrahend: int) -> IntegerOpResul
 def multiply_in_sign_magnitude(a: int, b: int) -> IntegerOpResult:
     a_bits = decimal_to_sign_magnitude(a)
     b_bits = decimal_to_sign_magnitude(b)
-    a_mag = _unsigned_bits_to_int(a_bits[1:])
-    b_mag = _unsigned_bits_to_int(b_bits[1:])
-    raw_product = _unsigned_multiply(a_mag, b_mag)
 
     sign = a_bits[0] ^ b_bits[0]
-    max_mag = _max_magnitude()
-    overflow = raw_product > max_mag
-    modulus = max_mag + 1
-    stored_mag = raw_product % modulus
+    a_mag_bits = _trim_leading_zeros(a_bits[1:])
+    b_mag_bits = _trim_leading_zeros(b_bits[1:])
+    raw_product_bits = _multiply_unsigned_bits(a_mag_bits, b_mag_bits)
+    overflow = len(raw_product_bits) > MAG_WIDTH
+    stored_mag_bits = _fit_unsigned_to_width(raw_product_bits, MAG_WIDTH)
 
-    bits = [sign] + _int_to_unsigned_bits(stored_mag, MAG_WIDTH)
+    bits = [sign] + stored_mag_bits
+    stored_mag = _unsigned_bits_to_int(stored_mag_bits)
+    raw_product = _unsigned_bits_to_int(raw_product_bits)
     decimal = -stored_mag if sign else stored_mag
     exact = -(raw_product) if sign else raw_product
     return IntegerOpResult(bits=bits, decimal=decimal, overflow=overflow, exact_decimal=exact)
@@ -70,21 +70,25 @@ def divide_in_sign_magnitude(dividend: int, divisor: int, precision: int = 5) ->
     divisor_bits = decimal_to_sign_magnitude(divisor)
     sign = dividend_bits[0] ^ divisor_bits[0]
 
-    abs_dividend = -dividend if dividend < 0 else dividend
-    abs_divisor = -divisor if divisor < 0 else divisor
+    dividend_mag_bits = _trim_leading_zeros(dividend_bits[1:])
+    divisor_mag_bits = _trim_leading_zeros(divisor_bits[1:])
 
-    scale = 1
+    ten_bits = [1, 0, 1, 0]
+    scale_bits = [1]
     for _ in range(precision):
-        scale *= 10
-    scaled_dividend = _unsigned_multiply(abs_dividend, scale)
-    scaled_quotient, remainder = _unsigned_divide(scaled_dividend, abs_divisor)
+        scale_bits = _multiply_unsigned_bits(scale_bits, ten_bits)
 
-    max_mag = _max_magnitude()
-    modulus = max_mag + 1
-    overflow = scaled_quotient > max_mag
-    stored_mag = scaled_quotient % modulus
-    bits = [sign] + _int_to_unsigned_bits(stored_mag, MAG_WIDTH)
+    scaled_dividend_bits = _multiply_unsigned_bits(dividend_mag_bits, scale_bits)
+    quotient_bits, remainder_bits = _divide_unsigned_bits(scaled_dividend_bits, divisor_mag_bits)
 
+    overflow = len(quotient_bits) > MAG_WIDTH
+    stored_mag_bits = _fit_unsigned_to_width(quotient_bits, MAG_WIDTH)
+    bits = [sign] + stored_mag_bits
+
+    scale = _unsigned_bits_to_int(scale_bits)
+    stored_mag = _unsigned_bits_to_int(stored_mag_bits)
+    scaled_quotient = _unsigned_bits_to_int(quotient_bits)
+    remainder = _unsigned_bits_to_int(remainder_bits)
     decimal = stored_mag / scale
     exact = scaled_quotient / scale
     if sign:

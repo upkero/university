@@ -142,6 +142,21 @@ def test_divide_in_sign_magnitude_regular_negative_and_overflow() -> None:
     assert overflow.overflow is True
 
 
+def test_divide_in_sign_magnitude_bit_patterns() -> None:
+    regular = divide_in_sign_magnitude(7, 2, precision=5)
+    assert bits_to_string(regular.bits) == "00000000000001010101011100110000"
+
+    negative = divide_in_sign_magnitude(-1, 8, precision=5)
+    assert bits_to_string(negative.bits) == "10000000000000000011000011010100"
+
+    repeating = divide_in_sign_magnitude(1, 3, precision=5)
+    assert bits_to_string(repeating.bits) == "00000000000000001000001000110101"
+    assert repeating.remainder == 1
+
+    overflow = divide_in_sign_magnitude((2**31) - 1, 1, precision=5)
+    assert bits_to_string(overflow.bits) == "01111111111111100111100101100000"
+
+
 def test_divide_in_sign_magnitude_raises() -> None:
     with pytest.raises(ZeroDivisionError):
         divide_in_sign_magnitude(1, 0, precision=5)
@@ -192,8 +207,12 @@ def test_float32_operations() -> None:
 def test_float32_division_by_zero_semantics() -> None:
     inf_result = float32_div(1.0, 0.0)
     nan_result = float32_div(0.0, 0.0)
+    nan_over_pos_zero = float32_div(math.nan, 0.0)
+    nan_over_neg_zero = float32_div(math.nan, -0.0)
     assert math.isinf(inf_result.decimal)
     assert math.isnan(nan_result.decimal)
+    assert math.isnan(nan_over_pos_zero.decimal)
+    assert math.isnan(nan_over_neg_zero.decimal)
 
 
 def test_excess3_roundtrip_and_bounds() -> None:
@@ -249,7 +268,15 @@ def test_main_smoke(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixtu
     monkeypatch.setattr("builtins.input", lambda _: next(answers))
     main()
     output = capsys.readouterr().out
-    assert "Прямой код" in output
-    assert "IEEE-754 float32 сложение" in output
-    assert "Сложение в BCD Excess-3" in output
-    assert "Готово." in output
+    assert "Direct code" in output
+    assert "IEEE-754 float32 addition" in output
+    assert "BCD Excess-3 addition" in output
+    assert "Done." in output
+
+
+def test_main_handles_input_errors(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    answers = iter(["not_an_int"])
+    monkeypatch.setattr("builtins.input", lambda _: next(answers))
+    main()
+    output = capsys.readouterr().out
+    assert "Error:" in output
