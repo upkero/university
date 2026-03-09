@@ -40,15 +40,21 @@ class RedundancyCheck:
 
 @dataclass(frozen=True)
 class PrimeImplicantChart:
-    minterms: Tuple[int, ...]
+    terms: Tuple[int, ...]
     implicants: Tuple[str, ...]
     matrix: Tuple[Tuple[int, ...], ...]
+    normal_form: str = "sdnf"
+
+    @property
+    def minterms(self) -> Tuple[int, ...]:
+        return self.terms
 
 
 @dataclass(frozen=True)
 class MinimizationResult:
     method_name: str
-    initial_sdnf: str
+    normal_form: str
+    initial_expression: str
     stages: Tuple[GluingStage, ...]
     prime_implicants: Tuple[str, ...]
     selected_implicants: Tuple[str, ...]
@@ -56,9 +62,32 @@ class MinimizationResult:
     redundancy_checks: Tuple[RedundancyCheck, ...] = tuple()
     chart: PrimeImplicantChart | None = None
 
+    @property
+    def initial_sdnf(self) -> str:
+        return self.initial_expression
+
+    @property
+    def form_label(self) -> str:
+        return "СДНФ" if self.normal_form == "sdnf" else "СКНФ"
+
+    @property
+    def prime_label(self) -> str:
+        return "импликанты" if self.normal_form == "sdnf" else "импликаты"
+
+    @property
+    def selected_label(self) -> str:
+        return self.prime_label
+
 
 def _pattern_from_minterm(minterm: int, dimension: int) -> str:
     return format(minterm, f"0{dimension}b")
+
+
+def _normalize_form(normal_form: str) -> str:
+    normalized = normal_form.lower()
+    if normalized not in {"sdnf", "sknf"}:
+        raise ValueError(f"Unsupported normal form: {normal_form}")
+    return normalized
 
 
 def _combine_patterns(left: str, right: str) -> str | None:
@@ -172,33 +201,47 @@ def _generate_prime_implicants(
     return tuple(stages), tuple(prime_result)
 
 
-def _pattern_to_term(pattern: str, variables: Tuple[str, ...]) -> str:
+def _pattern_to_term(
+    pattern: str, variables: Tuple[str, ...], normal_form: str = "sdnf"
+) -> str:
+    normal_form = _normalize_form(normal_form)
     literals: list[str] = []
     for bit, variable in zip(pattern, variables):
-        if bit == "1":
-            literals.append(variable)
-        elif bit == "0":
-            literals.append(f"!{variable}")
+        if normal_form == "sdnf":
+            if bit == "1":
+                literals.append(variable)
+            elif bit == "0":
+                literals.append(f"!{variable}")
+        else:
+            if bit == "0":
+                literals.append(variable)
+            elif bit == "1":
+                literals.append(f"!{variable}")
     if not literals:
-        return "1"
+        return "1" if normal_form == "sdnf" else "0"
     if len(literals) == 1:
         return literals[0]
-    return f"({'&'.join(literals)})"
+    joiner = "&" if normal_form == "sdnf" else "|"
+    return f"({joiner.join(literals)})"
 
 
-def _patterns_to_expression(patterns: Sequence[str], variables: Tuple[str, ...]) -> str:
+def _patterns_to_expression(
+    patterns: Sequence[str], variables: Tuple[str, ...], normal_form: str = "sdnf"
+) -> str:
+    normal_form = _normalize_form(normal_form)
     if not patterns:
-        return "0"
-    terms = [_pattern_to_term(pattern, variables) for pattern in patterns]
-    return "|".join(terms)
+        return "0" if normal_form == "sdnf" else "1"
+    terms = [_pattern_to_term(pattern, variables, normal_form) for pattern in patterns]
+    joiner = "|" if normal_form == "sdnf" else "&"
+    return joiner.join(terms)
 
 
-def _covers_all_minterms(
-    implicant_patterns: Sequence[str], minterms: Sequence[int], dimension: int
+def _covers_all_terms(
+    implicant_patterns: Sequence[str], terms: Sequence[int], dimension: int
 ) -> bool:
-    for minterm in minterms:
+    for term in terms:
         if not any(
-            implicant_covers_minterm(pattern, minterm, dimension)
+            implicant_covers_minterm(pattern, term, dimension)
             for pattern in implicant_patterns
         ):
             return False
@@ -206,49 +249,63 @@ def _covers_all_minterms(
 
 
 def _build_prime_implicant_chart(
-    dimension: int, prime_implicants: Sequence[str], minterms: Sequence[int]
+    dimension: int,
+    prime_implicants: Sequence[str],
+    terms: Sequence[int],
+    normal_form: str = "sdnf",
 ) -> PrimeImplicantChart:
+    normal_form = _normalize_form(normal_form)
     matrix = tuple(
         tuple(
-            int(implicant_covers_minterm(implicant, minterm, dimension))
-            for minterm in minterms
+            int(implicant_covers_minterm(implicant, term, dimension))
+            for term in terms
         )
         for implicant in prime_implicants
     )
     return PrimeImplicantChart(
-        minterms=tuple(minterms),
+        terms=tuple(terms),
         implicants=tuple(prime_implicants),
         matrix=matrix,
+        normal_form=normal_form,
     )
 
 
-def minimize_by_calculation(table: TruthTable) -> MinimizationResult:
+def minimize_by_calculation(
+    table: TruthTable, normal_form: str = "sdnf"
+) -> MinimizationResult:
+    normal_form = _normalize_form(normal_form)
     canonical = build_canonical_forms(table)
-    minterms = tuple(canonical.sdnf_numeric)
+    terms = (
+        tuple(canonical.sdnf_numeric)
+        if normal_form == "sdnf"
+        else tuple(canonical.sknf_numeric)
+    )
+    initial_expression = canonical.sdnf if normal_form == "sdnf" else canonical.sknf
     dimension = len(table.variables)
-    if not minterms:
+    if not terms:
         return MinimizationResult(
             method_name="calculation",
-            initial_sdnf=canonical.sdnf,
+            normal_form=normal_form,
+            initial_expression=initial_expression,
             stages=tuple(),
             prime_implicants=tuple(),
             selected_implicants=tuple(),
-            expression="0",
+            expression="0" if normal_form == "sdnf" else "1",
         )
 
-    stages, prime_implicants = _generate_prime_implicants(dimension, minterms)
+    stages, prime_implicants = _generate_prime_implicants(dimension, terms)
     selected = [item.pattern for item in prime_implicants]
     checks: list[RedundancyCheck] = []
     for pattern in list(selected):
         others = [item for item in selected if item != pattern]
-        removable = _covers_all_minterms(others, minterms, dimension)
+        removable = _covers_all_terms(others, terms, dimension)
         checks.append(
             RedundancyCheck(
                 implicant=pattern,
                 removed=removable,
                 reason="covered by other implicants"
                 if removable
-                else "required for at least one minterm",
+                else "required for at least one term",
             )
         )
         if removable:
@@ -258,39 +315,49 @@ def minimize_by_calculation(table: TruthTable) -> MinimizationResult:
 
     return MinimizationResult(
         method_name="calculation",
-        initial_sdnf=canonical.sdnf,
+        normal_form=normal_form,
+        initial_expression=initial_expression,
         stages=stages,
         prime_implicants=tuple(item.pattern for item in prime_implicants),
         selected_implicants=tuple(selected),
-        expression=_patterns_to_expression(selected, table.variables),
+        expression=_patterns_to_expression(selected, table.variables, normal_form),
         redundancy_checks=tuple(checks),
     )
 
 
-def minimize_by_calculation_table(table: TruthTable) -> MinimizationResult:
+def minimize_by_calculation_table(
+    table: TruthTable, normal_form: str = "sdnf"
+) -> MinimizationResult:
+    normal_form = _normalize_form(normal_form)
     canonical = build_canonical_forms(table)
-    minterms = tuple(canonical.sdnf_numeric)
+    terms = (
+        tuple(canonical.sdnf_numeric)
+        if normal_form == "sdnf"
+        else tuple(canonical.sknf_numeric)
+    )
+    initial_expression = canonical.sdnf if normal_form == "sdnf" else canonical.sknf
     dimension = len(table.variables)
-    if not minterms:
-        empty_chart = PrimeImplicantChart(tuple(), tuple(), tuple())
+    if not terms:
+        empty_chart = PrimeImplicantChart(tuple(), tuple(), tuple(), normal_form)
         return MinimizationResult(
             method_name="calculation_table",
-            initial_sdnf=canonical.sdnf,
+            normal_form=normal_form,
+            initial_expression=initial_expression,
             stages=tuple(),
             prime_implicants=tuple(),
             selected_implicants=tuple(),
-            expression="0",
+            expression="0" if normal_form == "sdnf" else "1",
             chart=empty_chart,
         )
 
-    stages, prime_implicants = _generate_prime_implicants(dimension, minterms)
+    stages, prime_implicants = _generate_prime_implicants(dimension, terms)
     prime_patterns = [item.pattern for item in prime_implicants]
     prime_patterns.sort(key=lambda item: (sum(bit != "-" for bit in item), item))
 
-    chart = _build_prime_implicant_chart(dimension, prime_patterns, minterms)
+    chart = _build_prime_implicant_chart(dimension, prime_patterns, terms, normal_form)
     selected: set[str] = set()
 
-    for column_index, minterm in enumerate(chart.minterms):
+    for column_index, _ in enumerate(chart.terms):
         covering = [
             chart.implicants[row_index]
             for row_index, row in enumerate(chart.matrix)
@@ -299,20 +366,20 @@ def minimize_by_calculation_table(table: TruthTable) -> MinimizationResult:
         if len(covering) == 1:
             selected.add(covering[0])
 
-    uncovered = set(minterms)
+    uncovered = set(terms)
     for pattern in selected:
-        for minterm in minterms:
-            if implicant_covers_minterm(pattern, minterm, dimension):
-                uncovered.discard(minterm)
+        for term in terms:
+            if implicant_covers_minterm(pattern, term, dimension):
+                uncovered.discard(term)
 
     while uncovered:
         candidates = [pattern for pattern in chart.implicants if pattern not in selected]
         scored_candidates = []
         for pattern in candidates:
             covered = {
-                minterm
-                for minterm in uncovered
-                if implicant_covers_minterm(pattern, minterm, dimension)
+                term
+                for term in uncovered
+                if implicant_covers_minterm(pattern, term, dimension)
             }
             scored_candidates.append((len(covered), -sum(bit != "-" for bit in pattern), pattern, covered))
         scored_candidates.sort(reverse=True)
@@ -327,11 +394,20 @@ def minimize_by_calculation_table(table: TruthTable) -> MinimizationResult:
     )
     return MinimizationResult(
         method_name="calculation_table",
-        initial_sdnf=canonical.sdnf,
+        normal_form=normal_form,
+        initial_expression=initial_expression,
         stages=stages,
         prime_implicants=tuple(prime_patterns),
         selected_implicants=tuple(selected_patterns),
-        expression=_patterns_to_expression(selected_patterns, table.variables),
+        expression=_patterns_to_expression(selected_patterns, table.variables, normal_form),
         chart=chart,
     )
+
+
+def minimize_sknf_by_calculation(table: TruthTable) -> MinimizationResult:
+    return minimize_by_calculation(table, normal_form="sknf")
+
+
+def minimize_sknf_by_calculation_table(table: TruthTable) -> MinimizationResult:
+    return minimize_by_calculation_table(table, normal_form="sknf")
 

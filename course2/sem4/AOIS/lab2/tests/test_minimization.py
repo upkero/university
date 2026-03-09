@@ -6,6 +6,8 @@ from src.minimization import (
     implicant_covers_minterm,
     minimize_by_calculation,
     minimize_by_calculation_table,
+    minimize_sknf_by_calculation,
+    minimize_sknf_by_calculation_table,
 )
 from src.truth_table import truth_table_from_vector
 
@@ -23,15 +25,33 @@ class MinimizationTests(unittest.TestCase):
         self.assertTrue(any(stage.records for stage in calculation.stages))
         self.assertIsNotNone(table_method.chart)
 
+    def test_sknf_minimization_uses_zero_rows(self) -> None:
+        table = truth_table_from_vector(("a", "b", "c"), (0, 0, 0, 1, 1, 1, 1, 1))
+
+        calculation = minimize_sknf_by_calculation(table)
+        table_method = minimize_sknf_by_calculation_table(table)
+
+        expected_expressions = {"(a|b)&(a|c)", "(a|c)&(a|b)"}
+        self.assertIn(calculation.expression, expected_expressions)
+        self.assertIn(table_method.expression, expected_expressions)
+        self.assertEqual(set(calculation.selected_implicants), {"0-0", "00-"})
+        self.assertEqual(set(table_method.selected_implicants), {"0-0", "00-"})
+        self.assertEqual(calculation.normal_form, "sknf")
+        self.assertEqual(table_method.normal_form, "sknf")
+
     def test_zero_and_one_functions(self) -> None:
         zero_table = truth_table_from_vector(("a", "b"), (0, 0, 0, 0))
         one_table = truth_table_from_vector(("a", "b"), (1, 1, 1, 1))
 
         zero_result = minimize_by_calculation(zero_table)
         one_result = minimize_by_calculation(one_table)
+        zero_sknf_result = minimize_sknf_by_calculation(zero_table)
+        one_sknf_result = minimize_sknf_by_calculation(one_table)
 
         self.assertEqual(zero_result.expression, "0")
         self.assertEqual(one_result.expression, "1")
+        self.assertEqual(zero_sknf_result.expression, "0")
+        self.assertEqual(one_sknf_result.expression, "1")
 
     def test_implicant_coverage(self) -> None:
         self.assertTrue(implicant_covers_minterm("1-0", 4, 3))

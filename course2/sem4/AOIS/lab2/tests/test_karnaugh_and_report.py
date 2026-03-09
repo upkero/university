@@ -25,12 +25,21 @@ class KarnaughAndReportTests(unittest.TestCase):
         self.assertTrue(result.groups)
         self.assertIn("[map]", result.rendered_map)
 
+    def test_karnaugh_supports_sknf_minimization(self) -> None:
+        table = truth_table_from_vector(("a", "b", "c"), (0, 0, 0, 1, 1, 1, 1, 1))
+        result = minimize_by_karnaugh(table, normal_form="sknf")
+        self.assertIn(result.expression, {"(a|b)&(a|c)", "(a|c)&(a|b)"})
+        self.assertEqual(result.normal_form, "sknf")
+        self.assertTrue(result.groups)
+
     def test_render_analysis_contains_required_sections(self) -> None:
         analysis = analyze_expression("a|b")
         text = render_analysis(analysis)
         self.assertIn("Таблица истинности:", text)
         self.assertIn("Полином Жегалкина:", text)
-        self.assertIn("Минимизация (карта Карно):", text)
+        self.assertIn("Минимизация СДНФ (карта Карно):", text)
+        self.assertIn("Минимизация СКНФ (карта Карно):", text)
+        self.assertIn("Минимизация СКНФ (расчетный метод):", text)
 
     def test_main_returns_error_for_empty_input(self) -> None:
         with patch("builtins.input", return_value=""), patch("sys.argv", ["prog"]), patch(

@@ -29,6 +29,9 @@ class FullAnalysis:
     calculation_minimization: MinimizationResult
     calculation_table_minimization: MinimizationResult
     karnaugh_minimization: KarnaughResult
+    calculation_sknf_minimization: MinimizationResult
+    calculation_table_sknf_minimization: MinimizationResult
+    karnaugh_sknf_minimization: KarnaughResult
 
 
 def analyze_expression(source: str) -> FullAnalysis:
@@ -42,6 +45,11 @@ def analyze_expression(source: str) -> FullAnalysis:
     calculation_minimization = minimize_by_calculation(table)
     calculation_table_minimization = minimize_by_calculation_table(table)
     karnaugh_minimization = minimize_by_karnaugh(table)
+    calculation_sknf_minimization = minimize_by_calculation(table, normal_form="sknf")
+    calculation_table_sknf_minimization = minimize_by_calculation_table(
+        table, normal_form="sknf"
+    )
+    karnaugh_sknf_minimization = minimize_by_karnaugh(table, normal_form="sknf")
     return FullAnalysis(
         parsed=parsed,
         table=table,
@@ -53,5 +61,8 @@ def analyze_expression(source: str) -> FullAnalysis:
         calculation_minimization=calculation_minimization,
         calculation_table_minimization=calculation_table_minimization,
         karnaugh_minimization=karnaugh_minimization,
+        calculation_sknf_minimization=calculation_sknf_minimization,
+        calculation_table_sknf_minimization=calculation_table_sknf_minimization,
+        karnaugh_sknf_minimization=karnaugh_sknf_minimization,
     )
 

@@ -52,9 +52,9 @@ def _format_gluing_stages(result: MinimizationResult) -> str:
 def _format_chart(chart: PrimeImplicantChart | None) -> str:
     if chart is None:
         return "таблица не построена"
-    if not chart.minterms:
-        return "нет единичных наборов"
-    header = "imp\\m " + " ".join(f"{minterm:>3}" for minterm in chart.minterms)
+    if not chart.terms:
+        return "нет единичных наборов" if chart.normal_form == "sdnf" else "нет нулевых наборов"
+    header = "pat\\idx " + " ".join(f"{term:>3}" for term in chart.terms)
     lines = [header, "-" * len(header)]
     for implicant, row in zip(chart.implicants, chart.matrix):
         row_values = " ".join(f"{cell:>3}" for cell in row)
@@ -92,6 +92,52 @@ def _format_implicants(patterns: Iterable[str]) -> str:
     return ", ".join(values) if values else "нет"
 
 
+def _append_calculation_section(
+    lines: list[str], title: str, result: MinimizationResult
+) -> None:
+    lines.extend(
+        [
+            title,
+            f"Исходная {result.form_label}: {result.initial_expression}",
+            _format_gluing_stages(result),
+            f"Простые {result.prime_label}: {_format_implicants(result.prime_implicants)}",
+            "Проверка лишних термов:",
+            _format_redundancy_checks(result),
+            f"Результат: {result.expression}",
+            "",
+        ]
+    )
+
+
+def _append_calculation_table_section(
+    lines: list[str], title: str, result: MinimizationResult
+) -> None:
+    lines.extend(
+        [
+            title,
+            f"Исходная {result.form_label}: {result.initial_expression}",
+            _format_gluing_stages(result),
+            "Таблица покрытия:",
+            _format_chart(result.chart),
+            f"Выбранные {result.selected_label}: {_format_implicants(result.selected_implicants)}",
+            f"Результат: {result.expression}",
+            "",
+        ]
+    )
+
+
+def _append_karnaugh_section(lines: list[str], title: str, expression_result) -> None:
+    lines.extend(
+        [
+            title,
+            expression_result.rendered_map,
+            f"Группы: {expression_result.groups}",
+            f"Результат: {expression_result.expression}",
+            "",
+        ]
+    )
+
+
 def render_analysis(result: FullAnalysis) -> str:
     lines = [
         f"Формула: {result.parsed.source}",
@@ -121,26 +167,26 @@ def render_analysis(result: FullAnalysis) -> str:
         "Булевы производные:",
         _format_derivatives(result),
         "",
-        "Минимизация (расчетный метод):",
-        f"Исходная СДНФ: {result.calculation_minimization.initial_sdnf}",
-        _format_gluing_stages(result.calculation_minimization),
-        f"Простые импликанты: {_format_implicants(result.calculation_minimization.prime_implicants)}",
-        "Проверка лишних импликант:",
-        _format_redundancy_checks(result.calculation_minimization),
-        f"Результат: {result.calculation_minimization.expression}",
-        "",
-        "Минимизация (расчетно-табличный метод):",
-        f"Исходная СДНФ: {result.calculation_table_minimization.initial_sdnf}",
-        _format_gluing_stages(result.calculation_table_minimization),
-        "Таблица простых импликант:",
-        _format_chart(result.calculation_table_minimization.chart),
-        f"Выбранные импликанты: {_format_implicants(result.calculation_table_minimization.selected_implicants)}",
-        f"Результат: {result.calculation_table_minimization.expression}",
-        "",
-        "Минимизация (карта Карно):",
-        result.karnaugh_minimization.rendered_map,
-        f"Группы: {result.karnaugh_minimization.groups}",
-        f"Результат: {result.karnaugh_minimization.expression}",
     ]
+    _append_calculation_section(lines, "Минимизация СДНФ (расчетный метод):", result.calculation_minimization)
+    _append_calculation_section(
+        lines,
+        "Минимизация СКНФ (расчетный метод):",
+        result.calculation_sknf_minimization,
+    )
+    _append_calculation_table_section(
+        lines,
+        "Минимизация СДНФ (расчетно-табличный метод):",
+        result.calculation_table_minimization,
+    )
+    _append_calculation_table_section(
+        lines,
+        "Минимизация СКНФ (расчетно-табличный метод):",
+        result.calculation_table_sknf_minimization,
+    )
+    _append_karnaugh_section(lines, "Минимизация СДНФ (карта Карно):", result.karnaugh_minimization)
+    _append_karnaugh_section(
+        lines, "Минимизация СКНФ (карта Карно):", result.karnaugh_sknf_minimization
+    )
     return "\n".join(lines).strip()
 

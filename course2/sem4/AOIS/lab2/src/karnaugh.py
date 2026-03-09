@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Sequence, Tuple
 
-from src.minimization import MinimizationResult, implicant_covers_minterm, minimize_by_calculation_table
+from src.minimization import (
+    MinimizationResult,
+    implicant_covers_minterm,
+    minimize_by_calculation_table,
+)
 from src.truth_table import TruthTable
 
 
@@ -18,11 +22,16 @@ class KarnaughLayer:
 
 @dataclass(frozen=True)
 class KarnaughResult:
+    normal_form: str
     expression: str
     selected_implicants: Tuple[str, ...]
     layers: Tuple[KarnaughLayer, ...]
     groups: Tuple[Tuple[int, ...], ...]
     rendered_map: str
+
+    @property
+    def form_label(self) -> str:
+        return "СДНФ" if self.normal_form == "sdnf" else "СКНФ"
 
 
 def _gray_codes(bits: int) -> Tuple[int, ...]:
@@ -135,28 +144,36 @@ def _groups_from_implicants(
     table: TruthTable, minimization_result: MinimizationResult
 ) -> Tuple[Tuple[int, ...], ...]:
     dimension = len(table.variables)
+    target_value = 1 if minimization_result.normal_form == "sdnf" else 0
     groups = []
     for implicant in minimization_result.selected_implicants:
         covered = tuple(
             index
             for index in range(1 << dimension)
             if implicant_covers_minterm(implicant, index, dimension)
-            and table.vector[index] == 1
+            and table.vector[index] == target_value
         )
         groups.append(covered)
     return tuple(groups)
 
 
-def minimize_by_karnaugh(table: TruthTable) -> KarnaughResult:
-    minimization_result = minimize_by_calculation_table(table)
+def minimize_by_karnaugh(
+    table: TruthTable, normal_form: str = "sdnf"
+) -> KarnaughResult:
+    minimization_result = minimize_by_calculation_table(table, normal_form)
     layers = build_karnaugh_layers(table)
     rendered = render_karnaugh_map(layers)
     groups = _groups_from_implicants(table, minimization_result)
     return KarnaughResult(
+        normal_form=minimization_result.normal_form,
         expression=minimization_result.expression,
         selected_implicants=minimization_result.selected_implicants,
         layers=layers,
         groups=groups,
         rendered_map=rendered,
     )
+
+
+def minimize_sknf_by_karnaugh(table: TruthTable) -> KarnaughResult:
+    return minimize_by_karnaugh(table, normal_form="sknf")
 
