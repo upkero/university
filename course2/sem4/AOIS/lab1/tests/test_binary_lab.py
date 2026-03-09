@@ -5,6 +5,7 @@ import math
 import pytest
 
 import src
+import src.float32_ieee as float32_ieee
 from src import (
     add_excess3,
     add_in_twos_complement,
@@ -25,6 +26,7 @@ from src import (
     invert_bits,
     multiply_in_sign_magnitude,
     ones_complement_to_decimal,
+    sign_magnitude_fixed_point_to_decimal,
     sign_magnitude_to_decimal,
     subtract_in_twos_complement,
     twos_complement_to_decimal,
@@ -55,6 +57,14 @@ def test_all_codes_for_negative_value() -> None:
 def test_sign_magnitude_roundtrip(value: int) -> None:
     bits = decimal_to_sign_magnitude(value)
     assert sign_magnitude_to_decimal(bits) == value
+
+
+def test_sign_magnitude_fixed_point_roundtrip() -> None:
+    bits = decimal_to_sign_magnitude(112)
+    assert sign_magnitude_fixed_point_to_decimal(bits, 5) == pytest.approx(3.5, abs=1e-8)
+
+    negative_bits = decimal_to_sign_magnitude(-4)
+    assert sign_magnitude_fixed_point_to_decimal(negative_bits, 5) == pytest.approx(-0.125, abs=1e-8)
 
 
 def test_sign_magnitude_overflow() -> None:
@@ -133,28 +143,33 @@ def test_divide_in_sign_magnitude_regular_negative_and_overflow() -> None:
     assert regular.decimal == pytest.approx(3.5, abs=1e-8)
     assert regular.exact_decimal == pytest.approx(3.5, abs=1e-8)
     assert regular.overflow is False
+    assert regular.precision == 5
 
     negative = divide_in_sign_magnitude(-1, 8, precision=5)
     assert negative.decimal == pytest.approx(-0.125, abs=1e-8)
     assert negative.exact_decimal == pytest.approx(-0.125, abs=1e-8)
+    assert negative.precision == 5
 
     overflow = divide_in_sign_magnitude((2**31) - 1, 1, precision=5)
-    assert overflow.overflow is True
+    assert overflow.overflow is False
+    assert overflow.decimal == pytest.approx((2**31) - 1, abs=1e-8)
+    assert overflow.precision == 0
 
 
 def test_divide_in_sign_magnitude_bit_patterns() -> None:
     regular = divide_in_sign_magnitude(7, 2, precision=5)
-    assert bits_to_string(regular.bits) == "00000000000001010101011100110000"
+    assert bits_to_string(regular.bits) == "00000000000000000000000001110000"
 
     negative = divide_in_sign_magnitude(-1, 8, precision=5)
-    assert bits_to_string(negative.bits) == "10000000000000000011000011010100"
+    assert bits_to_string(negative.bits) == "10000000000000000000000000000100"
 
     repeating = divide_in_sign_magnitude(1, 3, precision=5)
-    assert bits_to_string(repeating.bits) == "00000000000000001000001000110101"
-    assert repeating.remainder == 1
+    assert bits_to_string(repeating.bits) == "00000000000000000000000000001010"
+    assert repeating.remainder == 2
+    assert repeating.decimal == pytest.approx(0.3125, abs=1e-8)
 
     overflow = divide_in_sign_magnitude((2**31) - 1, 1, precision=5)
-    assert bits_to_string(overflow.bits) == "01111111111111100111100101100000"
+    assert bits_to_string(overflow.bits) == "01111111111111111111111111111111"
 
 
 def test_divide_in_sign_magnitude_raises() -> None:
@@ -215,6 +230,28 @@ def test_float32_division_by_zero_semantics() -> None:
     assert math.isnan(nan_over_neg_zero.decimal)
 
 
+def test_float32_private_helpers_and_validation() -> None:
+    assert float32_ieee._round_ties_to_even(2.6) == 3
+    assert float32_ieee._round_ties_to_even(2.4) == 2
+    assert float32_ieee._round_ties_to_even(2.5) == 2
+    assert float32_ieee._round_ties_to_even(3.5) == 4
+
+    assert float32_ieee._shift_right_with_sticky(0b1011, 0) == 0b1011
+    assert float32_ieee._shift_right_with_sticky(0b10, 5) == 1
+    assert float32_ieee._shift_right_with_sticky(0b1011, 2) == 0b11
+
+    with pytest.raises(ValueError):
+        float32_ieee._compose_float32_bits(2, 0, 0)
+    with pytest.raises(ValueError):
+        float32_ieee._compose_float32_bits(0, -1, 0)
+    with pytest.raises(ValueError):
+        float32_ieee._compose_float32_bits(0, 0, 1 << 23)
+    with pytest.raises(ValueError):
+        float32_ieee._unsigned_to_bits(-1)
+    with pytest.raises(ValueError):
+        float32_ieee._float_op(1.0, 2.0, "noop")
+
+
 def test_excess3_roundtrip_and_bounds() -> None:
     bits = decimal_to_excess3_bits(12_345_678)
     assert excess3_bits_to_decimal(bits) == 12_345_678
@@ -269,6 +306,7 @@ def test_main_smoke(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixtu
     main()
     output = capsys.readouterr().out
     assert "Direct code" in output
+    assert "Sign-magnitude division (precision 5)" in output
     assert "IEEE-754 float32 addition" in output
     assert "BCD Excess-3 addition" in output
     assert "Done." in output

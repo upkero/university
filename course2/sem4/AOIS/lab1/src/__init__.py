@@ -21,6 +21,7 @@ from .integer_codes import (
     decimal_to_sign_magnitude,
     decimal_to_twos_complement,
     ones_complement_to_decimal,
+    sign_magnitude_fixed_point_to_decimal,
     sign_magnitude_to_decimal,
     twos_complement_to_decimal,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "invert_bits",
     "multiply_in_sign_magnitude",
     "ones_complement_to_decimal",
+    "sign_magnitude_fixed_point_to_decimal",
     "sign_magnitude_to_decimal",
     "subtract_in_twos_complement",
     "twos_complement_to_decimal",

@@ -30,6 +30,19 @@ def sign_magnitude_to_decimal(bits: BitArray) -> int:
     return -magnitude if sign else magnitude
 
 
+def sign_magnitude_fixed_point_to_decimal(bits: BitArray, fractional_bits: int) -> float:
+    if fractional_bits < 0:
+        raise ValueError("fractional_bits must be non-negative")
+
+    _validate_bits(bits)
+    sign = bits[0]
+    magnitude = _unsigned_bits_to_int(bits[1:])
+    value = magnitude / (2**fractional_bits)
+    if sign == 1 and magnitude == 0:
+        return 0.0
+    return -value if sign else value
+
+
 def decimal_to_ones_complement(value: int) -> BitArray:
     abs_value = -value if value < 0 else value
     if abs_value > _max_magnitude():

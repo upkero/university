@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from src.bit_core import (
     _add_unsigned_bits,
+    _compare_unsigned_bits,
     _divide_unsigned_bits,
     _fit_unsigned_to_width,
     _multiply_unsigned_bits,
     _negate_twos,
+    _subtract_unsigned_bits,
     _trim_leading_zeros,
     _unsigned_bits_to_int,
 )
 from src.common_types import DivisionResult, IntegerOpResult, MAG_WIDTH
 from src.integer_codes import (
     decimal_to_sign_magnitude,
+    sign_magnitude_fixed_point_to_decimal,
     decimal_to_twos_complement,
     twos_complement_to_decimal,
 )
@@ -73,32 +76,46 @@ def divide_in_sign_magnitude(dividend: int, divisor: int, precision: int = 5) ->
     dividend_mag_bits = _trim_leading_zeros(dividend_bits[1:])
     divisor_mag_bits = _trim_leading_zeros(divisor_bits[1:])
 
-    ten_bits = [1, 0, 1, 0]
-    scale_bits = [1]
-    for _ in range(precision):
-        scale_bits = _multiply_unsigned_bits(scale_bits, ten_bits)
+    integer_bits, remainder_bits = _divide_unsigned_bits(dividend_mag_bits, divisor_mag_bits)
+    integer_part_bits = [] if integer_bits == [0] else integer_bits
+    used_precision = min(precision, MAG_WIDTH - len(integer_part_bits))
 
-    scaled_dividend_bits = _multiply_unsigned_bits(dividend_mag_bits, scale_bits)
-    quotient_bits, remainder_bits = _divide_unsigned_bits(scaled_dividend_bits, divisor_mag_bits)
+    fraction_bits: list[int] = []
+    remainder_work = remainder_bits
+    two_bits = [1, 0]
+    for _ in range(used_precision):
+        if remainder_work == [0]:
+            fraction_bits.append(0)
+            continue
 
-    overflow = len(quotient_bits) > MAG_WIDTH
-    stored_mag_bits = _fit_unsigned_to_width(quotient_bits, MAG_WIDTH)
+        doubled_remainder = _multiply_unsigned_bits(remainder_work, two_bits)
+        if _compare_unsigned_bits(doubled_remainder, divisor_mag_bits) >= 0:
+            fraction_bits.append(1)
+            remainder_work = _subtract_unsigned_bits(doubled_remainder, divisor_mag_bits)
+        else:
+            fraction_bits.append(0)
+            remainder_work = doubled_remainder
+
+    magnitude_bits = integer_part_bits + fraction_bits
+    if not magnitude_bits:
+        magnitude_bits = [0]
+
+    overflow = len(integer_part_bits) > MAG_WIDTH
+    if overflow:
+        stored_mag_bits = _fit_unsigned_to_width(integer_part_bits, MAG_WIDTH)
+        used_precision = 0
+    else:
+        stored_mag_bits = [0] * (MAG_WIDTH - len(magnitude_bits)) + magnitude_bits
+
     bits = [sign] + stored_mag_bits
-
-    scale = _unsigned_bits_to_int(scale_bits)
-    stored_mag = _unsigned_bits_to_int(stored_mag_bits)
-    scaled_quotient = _unsigned_bits_to_int(quotient_bits)
-    remainder = _unsigned_bits_to_int(remainder_bits)
-    decimal = stored_mag / scale
-    exact = scaled_quotient / scale
-    if sign:
-        decimal = -decimal
-        exact = -exact
+    decimal = sign_magnitude_fixed_point_to_decimal(bits, used_precision)
+    exact = decimal
+    remainder = _unsigned_bits_to_int(remainder_work)
     return DivisionResult(
         bits=bits,
         decimal=decimal,
         overflow=overflow,
         exact_decimal=exact,
         remainder=remainder,
-        precision=precision,
+        precision=used_precision,
     )
