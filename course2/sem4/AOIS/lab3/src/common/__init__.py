@@ -9,7 +9,14 @@
     iter_assignments,
     minimize_sop,
 )
-from src.common.circuit import Circuit, Gate, build_circuit_from_patterns, render_circuit
+from src.common.circuit import (
+    Circuit,
+    Gate,
+    build_circuit_from_patterns,
+    evaluate_circuit,
+    evaluate_gate_network,
+    render_circuit,
+)
 from src.common.render import render_section, render_table
 
 __all__ = [
@@ -25,6 +32,8 @@ __all__ = [
     "Gate",
     "Circuit",
     "build_circuit_from_patterns",
+    "evaluate_gate_network",
+    "evaluate_circuit",
     "render_circuit",
     "render_table",
     "render_section",

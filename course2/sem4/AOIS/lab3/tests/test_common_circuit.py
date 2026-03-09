@@ -1,6 +1,6 @@
-﻿import unittest
+import unittest
 
-from src.common.circuit import build_circuit_from_patterns, render_circuit
+from src.common.circuit import Circuit, Gate, build_circuit_from_patterns, evaluate_circuit, render_circuit
 
 
 class CircuitTestCase(unittest.TestCase):
@@ -28,7 +28,19 @@ class CircuitTestCase(unittest.TestCase):
         rendered = render_circuit(circuit)
         self.assertIn("F = t1", rendered)
 
+    def test_evaluate_circuit_supports_xor(self) -> None:
+        circuit = Circuit(
+            output_name="F",
+            output_source="xor1",
+            gates=(
+                Gate(name="XOR1", gate_type="XOR", inputs=("A", "B"), output="xor1"),
+            ),
+        )
+        self.assertEqual(evaluate_circuit(circuit, {"A": 0, "B": 0}), 0)
+        self.assertEqual(evaluate_circuit(circuit, {"A": 0, "B": 1}), 1)
+        self.assertEqual(evaluate_circuit(circuit, {"A": 1, "B": 0}), 1)
+        self.assertEqual(evaluate_circuit(circuit, {"A": 1, "B": 1}), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
-

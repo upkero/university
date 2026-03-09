@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,14 @@ class Circuit:
     output_name: str
     output_source: str
     gates: tuple[Gate, ...]
+
+
+def _resolve_signal(name: str, signals: Mapping[str, int]) -> int:
+    if name == "0":
+        return 0
+    if name == "1":
+        return 1
+    return int(bool(signals[name]))
 
 
 def build_circuit_from_patterns(
@@ -114,4 +122,35 @@ def render_circuit(circuit: Circuit) -> str:
         lines.append(f"{circuit.output_name} = {circuit.output_source}")
 
     return "\n".join(lines)
+
+
+def evaluate_gate_network(gates: Sequence[Gate], inputs: Mapping[str, int]) -> dict[str, int]:
+    signals = {name: int(bool(value)) for name, value in inputs.items()}
+
+    for gate in gates:
+        input_values = [_resolve_signal(signal, signals) for signal in gate.inputs]
+
+        if gate.gate_type == "NOT":
+            if len(input_values) != 1:
+                raise ValueError("NOT gate must have exactly one input.")
+            output_value = 1 - input_values[0]
+        elif gate.gate_type == "AND":
+            output_value = int(all(input_values))
+        elif gate.gate_type == "OR":
+            output_value = int(any(input_values))
+        elif gate.gate_type == "XOR":
+            output_value = 0
+            for value in input_values:
+                output_value ^= value
+        else:
+            raise ValueError(f"Unsupported gate type: {gate.gate_type}")
+
+        signals[gate.output] = output_value
+
+    return signals
+
+
+def evaluate_circuit(circuit: Circuit, inputs: Mapping[str, int]) -> int:
+    signals = evaluate_gate_network(circuit.gates, inputs)
+    return _resolve_signal(circuit.output_source, signals)
 
